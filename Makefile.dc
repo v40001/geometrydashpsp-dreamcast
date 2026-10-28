@@ -1,0 +1,51 @@
+# Makefile.dc - the Dreamcast build
+#
+#   ./dc/build.sh              gd.elf, 1ST_READ.BIN and the disc tree
+#   ./dc/build.sh image        ... and gd.cdi/gd.iso
+#
+# Needs KallistiOS and its sh-elf toolchain (dc/build.sh sources
+# $KOS_BASE/environ.sh), Python 3 with Pillow for the sprite sheets, and
+# mkisofs for the disc.
+
+TARGET  = gd.elf
+OBJ_DIR = dc/build
+
+KOS_PORTS ?= $(KOS_BASE)/../kos-ports
+
+GAME_SRC := $(shell find source -name '*.c' ! -name network.c ! -name mp3_player.c ! -name wav_player.c | sort)
+PORT_SRC := $(wildcard dc/src/*.c) libraries/color.c
+OBJS     := $(addprefix $(OBJ_DIR)/,$(GAME_SRC:.c=.o) $(PORT_SRC:.c=.o))
+
+INCDIR = dc/include source libraries
+# The SH-4's FPU is single precision: each double operation is a software
+# routine, and the game (written for the 3DS, which has them) writes its
+# constants as doubles (0.8, not 0.8f). -fsingle-precision-constant makes
+# them floats: no more software math per sprite, per particle, per physics
+# step.
+FPU_FLAGS = -fsingle-precision-constant -fno-math-errno
+CFLAGS    = -O2 -Wall -std=gnu11 -Wno-unused-variable -Wno-unused-but-set-variable \
+            -Wno-unused-function -Wno-unused-result -Wno-missing-braces -fno-strict-aliasing \
+            $(FPU_FLAGS) -D__GD_PORT__ $(addprefix -I,$(INCDIR)) \
+            -I$(KOS_PORTS)/include/zlib $(CFLAGS_EXTRA)
+
+# the game names its files romfs:/ and /3ds/gd3ds/; dc/src/ctru_dc.c maps them
+WRAPPED = fopen open stat opendir access remove unlink rename mkdir
+comma   := ,
+LDFLAGS = $(addprefix -Wl$(comma)--wrap=,$(WRAPPED))
+LIBS    = -L$(KOS_PORTS)/lib -lz -lpthread
+
+all: $(TARGET)
+
+$(OBJ_DIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	kos-cc $(CFLAGS) -MMD -MP -c $< -o $@
+
+-include $(OBJS:.o=.d)
+
+$(TARGET): $(OBJS)
+	kos-cc -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
+
+clean:
+	rm -rf $(OBJ_DIR) $(TARGET) 1ST_READ.BIN gd.iso gd.cdi
+
+.PHONY: all clean
