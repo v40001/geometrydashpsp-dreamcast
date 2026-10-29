@@ -10,6 +10,10 @@
   itself based on the 3DS port (<a href="https://github.com/AleFunky/gd3ds">AleFunky/gd3ds</a>).
 </p>
 
+<p align="center">
+  <img src="dc/screenshot.png" width="480" alt="Geometry Dash running on Dreamcast">
+</p>
+
 ## Download
 
 Prebuilt images are on the [Releases](../../releases) page:
