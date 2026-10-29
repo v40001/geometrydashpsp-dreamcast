@@ -37,6 +37,19 @@ if [ ! -f dc/disc/IP.BIN ]; then
 	fi
 fi
 
+# Real GD-ROM bootstrap needs the track TOC inside IP.BIN: "TOC1" at 0x100,
+# then 97 entries of (start LBA + 150) and type (0x41 data). Track 3 sits at
+# LBA 45000; emulators skip this check but GD-ROM drives/ODEs do not.
+python3 - dc/disc/IP.BIN <<'PY'
+import sys
+p = sys.argv[1]
+d = bytearray(open(p, 'rb').read())
+d[0x100:0x104] = b'TOC1'
+d[0x104:0x288] = b'\xff' * (97 * 4)
+d[0x104:0x108] = bytes((0x1e, 0xb0, 0x00, 0x41))  # 45150, data
+open(p, 'wb').write(d)
+PY
+
 cp 1ST_READ.BIN dc/disc/
 "$MKISOFS" -quiet -G dc/disc/IP.BIN -R -J -V GDROM -o gd.iso dc/disc/
 
