@@ -58,7 +58,10 @@ rm -rf "$GDI" && mkdir -p "$GDI"
 # a GD-ROM boots an unscrambled binary
 "${KOS_OBJCOPY:-sh-elf-objcopy}" -O binary gd.elf dc/disc/1ST_READ.BIN
 "$MKISOFS" -quiet -C 0,45000 -G dc/disc/IP.BIN -R -J -V GDROM -l -o "$GDI/track03.iso" dc/disc/
-dd if=/dev/zero of="$GDI/track01.iso" bs=2048 count=300 2>/dev/null
+mkdir -p "$GDI/.t1"
+printf 'This disc is for use with the Sega Dreamcast only.\n' > "$GDI/.t1/WARNING.TXT"
+"$MKISOFS" -quiet -V GDMUSIC -o "$GDI/track01.iso" "$GDI/.t1"
+rm -rf "$GDI/.t1"
 dd if=/dev/zero of="$GDI/track02.raw" bs=2352 count=300 2>/dev/null
 cat > "$GDI/disc.gdi" <<GD
 3
