@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="dc/readme_header.png" width="480" alt="Geometry Dash for Sega Dreamcast">
+  <img src="dc/title_dc.png" width="480" alt="Geometry Dash for Sega Dreamcast">
 </p>
 
 <h1 align="center">Geometry Dash — Dreamcast Port</h1>
